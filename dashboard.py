@@ -6,8 +6,7 @@ A script generating a simple task dashboard in the terminal.
 
 from datetime import date
 
-from scripts.cli import TaskRelatedConfig
-from scripts.core import Document, DocumentTree, TaskStatus
+from scripts.tasks import Document, DocumentTree, TaskRelatedConfig, TaskStatus
 
 
 def main():

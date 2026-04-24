@@ -5,14 +5,16 @@ A script concatenating files into a single context file optimized for LLM
 analysis.
 """
 
+import argparse
 import glob
 import logging
 import os
 import re
 import subprocess
 from pathlib import Path
+from typing import Self, override
 
-from scripts.cli import ContextConfig
+from scripts.cli import ArgumentConfig
 
 # Safety limits
 MAX_FILE_SIZE: int = int(os.environ.get("MAX_FILE_SIZE", "-1"))
@@ -79,6 +81,44 @@ def main():
     files = sorted(set(f for f in files if f.is_file()), key=path_sorting_key)
 
     concatenate_scripts(files, Path(args.output), args.reader)
+
+
+class ContextConfig(ArgumentConfig):
+    files: list[str] = []  # Dummy value for a mandatory field
+    output: Path = Path("temp/context.md")
+    reader: str = "notebooklm"
+
+    @classmethod
+    @override
+    def parse_args(cls) -> "Self":
+        parser = argparse.ArgumentParser(
+            description="Concatenate scripts for LLM context."
+        )
+
+        _ = parser.add_argument(
+            "files", nargs="+", help="File paths or glob patterns to include."
+        )
+
+        _ = parser.add_argument(
+            "--output",
+            dest="output",
+            type=Path,
+            help="Output file path.",
+        )
+
+        _ = parser.add_argument(
+            "--reader",
+            dest="reader",
+            type=str,
+            help="Target reader (LLM).",
+        )
+
+        args = parser.parse_args(namespace=cls())
+
+        args.output = args.output.resolve()
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+
+        return args
 
 
 def filter_gitignore(files: list[Path]) -> list[Path]:
